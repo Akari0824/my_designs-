@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ember & Oak — Coffee Roasters</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f4ece1;
+    --cream-deep: #e8dcc8;
+    --espresso: #2b1810;
+    --coffee: #4a2c1d;
+    --crema: #c89669;
+    --rust: #a64d2a;
+    --ink: #1a0f0a;
+    --paper: #faf6ee;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--espresso);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Grain texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* NAVIGATION */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 1.5rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.4s ease;
+    mix-blend-mode: difference;
+  }
+
+  nav.scrolled {
+    background: rgba(250, 246, 238, 0.95);
+    backdrop-filter: blur(12px);
+    mix-blend-mode: normal;
+    border-bottom: 1px solid rgba(43, 24, 16, 0.08);
+    padding: 1rem 3rem;
+  }
+
+  .logo {
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+    color: var(--paper);
+  }
+
+  nav.scrolled .logo { color: var(--espresso); }
+
+  .logo span { font-style: italic; font-weight: 400; }
+
+  .nav-links {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--paper);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    position: relative;
+    transition: color 0.3s;
+  }
+
+  nav.scrolled .nav-links a { color: var(--espresso); }
+
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: currentColor;
+    transition: width 0.3s ease;
+  }
+
+  .nav-links a:hover::after { width: 100%; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--espresso) 0%, var(--coffee) 60%, var(--rust) 100%);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 0 3rem;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 80% 20%, rgba(200, 150, 105, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 20% 80%, rgba(166, 77, 42, 0.25) 0%, transparent 50%);
+  }
+
+  .hero-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-text {
+    color: var(--cream);
+  }
+
+  .hero-eyebrow {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    color: var(--crema);
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.2s forwards;
+  }
+
+  .hero-eyebrow::before {
+    content: '— ';
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(3.5rem, 8vw, 7rem);
+    font-weight: 300;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.4s forwards;
+  }
+
+  h1 em {
+    font-style: italic;
+    font-weight: 900;
+    color: var(--crema);
+  }
+
+  .hero-desc {
+    font-size: 1.1rem;
+    max-width: 480px;
+    color: var(--cream-deep);
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.6s forwards;
+  }
+
+  .cta-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.8s forwards;
+  }
+
+  .btn {
+    padding: 1rem 2rem;
+    border: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-primary {
+    background: var(--crema);
+    color: var(--espresso);
+    border-radius: 999px;
+  }
+
+  .btn-primary:hover {
+    background: var(--cream);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(200, 150, 105, 0.4);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--cream);
+    border: 1px solid rgba(244, 236, 225, 0.3);
+    border-radius: 999px;
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--cream);
+    background: rgba(244, 236, 225, 0.05);
+  }
+
+  /* Hero visual - cup illustration */
+  .hero-visual {
+    position: relative;
+    height: 500px;
+    opacity: 0;
+    animation: fadeIn 1.2s 0.6s forwards;
+  }
+
+  .cup {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 360px;
+    height: 360px;
+  }
+
+  .cup-circle {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 35%, #6b3a1f 0%, #2b1810 60%, #1a0f0a 100%);
+    box-shadow:
+      inset -20px -30px 60px rgba(0,0,0,0.4),
+      inset 20px 20px 40px rgba(166, 77, 42, 0.3),
+      0 30px 80px rgba(0,0,0,0.5);
+    position: relative;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .cup-circle::before {
+    content: '';
+    position: absolute;
+    top: 15%;
+    left: 20%;
+    width: 30%;
+    height: 20%;
+    background: radial-gradient(ellipse, rgba(200, 150, 105, 0.4) 0%, transparent 70%);
+    border-radius: 50%;
+    filter: blur(8px);
+  }
+
+  /* Steam */
+  .steam {
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+  }
+
+  .steam span {
+    display: block;
+    width: 6px;
+    height: 60px;
+    background: linear-gradient(to top, rgba(244, 236, 225, 0.4), transparent);
+    border-radius: 50%;
+    animation: steam 3s ease-in-out infinite;
+  }
+
+  .steam span:nth-child(2) { animation-delay: 0.5s; }
+  .steam span:nth-child(3) { animation-delay: 1s; }
+
+  /* Floating beans */
+  .bean {
+    position: absolute;
+    width: 24px;
+    height: 32px;
+    background: var(--coffee);
+    border-radius: 50%;
+    box-shadow: inset -4px -2px 6px rgba(0,0,0,0.4);
+  }
+
+  .bean::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: linear-gradient(to right, transparent 48%, var(--ink) 49%, var(--ink) 51%, transparent 52%);
+  }
+
+  .bean-1 { top: 15%; right: 10%; animation: floatBean 7s ease-in-out infinite; }
+  .bean-2 { bottom: 20%; left: 8%; animation: floatBean 8s ease-in-out infinite 1s; transform: rotate(45deg); }
+  .bean-3 { top: 60%; right: 5%; animation: floatBean 6s ease-in-out infinite 0.5s; transform: rotate(-30deg); }
+
+  /* SECTIONS */
+  section {
+    padding: 8rem 3rem;
+    position: relative;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    color: var(--rust);
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+  }
+
+  .section-label::before { content: '— '; }
+
+  h2 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    margin-bottom: 3rem;
+    color: var(--espresso);
+  }
+
+  h2 em {
+    font-style: italic;
+    font-weight: 600;
+    color: var(--rust);
+  }
+
+  /* MENU SECTION */
+  .menu {
+    background: var(--paper);
+  }
+
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 4rem;
+  }
+
+  .menu-item {
+    padding: 2.5rem;
+    background: var(--cream);
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.4s ease;
+    border: 1px solid rgba(43, 24, 16, 0.08);
+    overflow: hidden;
+  }
+
+  .menu-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--espresso), var(--coffee));
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: 0;
+  }
+
+  .menu-item:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 50px rgba(43, 24, 16, 0.15);
+  }
+
+  .menu-item:hover::before { opacity: 1; }
+  .menu-item:hover * { color: var(--cream); position: relative; z-index: 1; }
+  .menu-item:hover .menu-number { color: var(--crema); }
+
+  .menu-number {
+    font-family: 'Fraunces', serif;
+    font-size: 0.9rem;
+    font-style: italic;
+    color: var(--rust);
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 1;
+    transition: color 0.4s;
+  }
+
+  .menu-item h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 1;
+    transition: color 0.4s;
+  }
+
+  .menu-item p {
+    font-size: 0.95rem;
+    color: var(--coffee);
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+    transition: color 0.4s;
+  }
+
+  .menu-price {
+    font-family: 'Fraunces', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    position: relative;
+    z-index: 1;
+    transition: color 0.4s;
+  }
+
+  /* STORY SECTION */
+  .story {
+    background: var(--cream);
+    position: relative;
+  }
+
+  .story-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6rem;
+    align-items: center;
+  }
+
+  .story-text p {
+    font-size: 1.1rem;
+    color: var(--coffee);
+    margin-bottom: 1.5rem;
+    line-height: 1.7;
+  }
+
+  .story-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 3rem;
+    padding-top: 3rem;
+    border-top: 1px solid rgba(43, 24, 16, 0.15);
+  }
+
+  .stat-number {
+    font-family: 'Fraunces', serif;
+    font-size: 3rem;
+    font-weight: 600;
+    color: var(--rust);
+    line-height: 1;
+    display: block;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--coffee);
+    margin-top: 0.5rem;
+  }
+
+  .story-image {
+    aspect-ratio: 4/5;
+    background:
+      linear-gradient(135deg, rgba(43, 24, 16, 0.3), rgba(166, 77, 42, 0.2)),
+      radial-gradient(circle at 30% 40%, var(--rust), var(--espresso));
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(43, 24, 16, 0.3);
+  }
+
+  .story-image::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E");
+  }
+
+  .story-image::after {
+    content: '"';
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    font-family: 'Fraunces', serif;
+    font-size: 12rem;
+    font-style: italic;
+    color: var(--crema);
+    opacity: 0.3;
+    line-height: 1;
+  }
+
+  .quote {
+    position: absolute;
+    bottom: 2rem;
+    left: 2rem;
+    right: 2rem;
+    color: var(--cream);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 1.25rem;
+    line-height: 1.4;
+  }
+
+  .quote-author {
+    display: block;
+    margin-top: 1rem;
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--crema);
+  }
+
+  /* VISIT SECTION */
+  .visit {
+    background: var(--espresso);
+    color: var(--cream);
+  }
+
+  .visit h2 { color: var(--cream); }
+  .visit h2 em { color: var(--crema); }
+  .visit .section-label { color: var(--crema); }
+
+  .visit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    margin-top: 4rem;
+  }
+
+  .visit-card {
+    padding: 3rem;
+    background: rgba(244, 236, 225, 0.04);
+    border: 1px solid rgba(244, 236, 225, 0.1);
+    border-radius: 4px;
+    backdrop-filter: blur(10px);
+  }
+
+  .visit-card h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--crema);
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(244, 236, 225, 0.1);
+    font-size: 0.95rem;
+  }
+
+  .info-row:last-child { border-bottom: none; }
+
+  .info-row span:first-child {
+    color: var(--cream-deep);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.8rem;
+  }
+
+  .address {
+    font-family: 'Fraunces', serif;
+    font-size: 1.5rem;
+    line-height: 1.4;
+    margin-bottom: 2rem;
+  }
+
+  /* FOOTER */
+  footer {
+    background: var(--ink);
+    color: var(--cream-deep);
+    padding: 3rem;
+    text-align: center;
+  }
+
+  .footer-logo {
+    font-family: 'Fraunces', serif;
+    font-size: 2rem;
+    font-weight: 900;
+    margin-bottom: 1rem;
+  }
+
+  .footer-logo span { font-style: italic; font-weight: 400; }
+
+  .footer-tagline {
+    font-style: italic;
+    font-family: 'Fraunces', serif;
+    color: var(--crema);
+    margin-bottom: 2rem;
+  }
+
+  .footer-copy {
+    font-size: 0.8rem;
+    color: var(--coffee);
+    letter-spacing: 0.1em;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+  }
+
+  @keyframes floatBean {
+    0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+    50% { transform: translateY(-20px) rotate(calc(var(--r, 0deg) + 15deg)); }
+  }
+
+  @keyframes steam {
+    0% { opacity: 0; transform: translateY(0) scale(1); }
+    50% { opacity: 0.6; }
+    100% { opacity: 0; transform: translateY(-40px) scale(1.5); }
+  }
+
+  /* Scroll reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .hero { padding: 0 1.5rem; }
+    .hero-content { grid-template-columns: 1fr; }
+    .hero-visual { display: none; }
+    section { padding: 5rem 1.5rem; }
+    .menu-grid { grid-template-columns: 1fr; }
+    .story-grid, .visit-grid { grid-template-columns: 1fr; gap: 3rem; }
+    .story-image { aspect-ratio: 1; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="logo">Ember<span>&</span>Oak</div>
+  <ul class="nav-links">
+    <li><a href="#menu">Menu</a></li>
+    <li><a href="#story">Our Story</a></li>
+    <li><a href="#visit">Visit</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-text">
+      <div class="hero-eyebrow">Small-batch roasters since 2014</div>
+      <h1>Coffee, slowly <em>considered.</em></h1>
+      <p class="hero-desc">From single-origin beans roasted in our basement to the cup in your hand — every step is an act of patience, and an act of love.</p>
+      <div class="cta-row">
+        <a href="#menu" class="btn btn-primary">Explore the Menu</a>
+        <a href="#story" class="btn btn-ghost">Our Story</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="cup">
+        <div class="steam">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="cup-circle"></div>
+      </div>
+      <div class="bean bean-1"></div>
+      <div class="bean bean-2"></div>
+      <div class="bean bean-3"></div>
+    </div>
+  </div>
+</section>
+
+<!-- MENU -->
+<section class="menu" id="menu">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">The Menu</div>
+      <h2>Crafted with <em>intention.</em></h2>
+    </div>
+    <div class="menu-grid">
+      <div class="menu-item reveal">
+        <div class="menu-number">No. 01</div>
+        <h3>Ethiopia Yirgacheffe</h3>
+        <p>Bright and floral with notes of jasmine, bergamot, and stone fruit. Pour-over only.</p>
+        <div class="menu-price">$5.50</div>
+      </div>
+      <div class="menu-item reveal">
+        <div class="menu-number">No. 02</div>
+        <h3>House Cortado</h3>
+        <p>Two ristretto shots cut with steamed milk. Velvet texture, balanced and warm.</p>
+        <div class="menu-price">$4.75</div>
+      </div>
+      <div class="menu-item reveal">
+        <div class="menu-number">No. 03</div>
+        <h3>Brown Butter Latte</h3>
+        <p>House espresso, brown butter syrup, and oat milk. A seasonal favorite.</p>
+        <div class="menu-price">$6.25</div>
+      </div>
+      <div class="menu-item reveal">
+        <div class="menu-number">No. 04</div>
+        <h3>Cold Brew Tonic</h3>
+        <p>24-hour cold brew over ice with a splash of tonic and lemon peel. Unexpected.</p>
+        <div class="menu-price">$5.95</div>
+      </div>
+      <div class="menu-item reveal">
+        <div class="menu-number">No. 05</div>
+        <h3>Cardamom Cappuccino</h3>
+        <p>A whisper of green cardamom in steamed milk. Inspired by Istanbul mornings.</p>
+        <div class="menu-price">$5.50</div>
+      </div>
+      <div class="menu-item reveal">
+        <div class="menu-number">No. 06</div>
+        <h3>Single-Origin Drip</h3>
+        <p>Rotating selection from our roastery. Ask the barista what's pouring today.</p>
+        <div class="menu-price">$4.25</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STORY -->
+<section class="story" id="story">
+  <div class="container">
+    <div class="story-grid">
+      <div class="story-text reveal">
+        <div class="section-label">Our Story</div>
+        <h2>A decade in <em>pursuit</em> of the perfect cup.</h2>
+        <p>Ember & Oak began in 2014 with one second-hand drum roaster, two stubborn founders, and a belief that great coffee is worth slowing down for.</p>
+        <p>We source directly from farms in Ethiopia, Colombia, and Guatemala — paying well above commodity prices because the people who grow our coffee deserve it.</p>
+        <div class="story-stats">
+          <div>
+            <span class="stat-number">11</span>
+            <div class="stat-label">Years Roasting</div>
+          </div>
+          <div>
+            <span class="stat-number">23</span>
+            <div class="stat-label">Farm Partners</div>
+          </div>
+          <div>
+            <span class="stat-number">∞</span>
+            <div class="stat-label">Cups Poured</div>
+          </div>
+        </div>
+      </div>
+      <div class="story-image reveal">
+        <div class="quote">
+          Coffee is a daily ritual disguised as a beverage.
+          <span class="quote-author">— Mira & Theo, Founders</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VISIT -->
+<section class="visit" id="visit">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Come Visit</div>
+      <h2>Find us on <em>Mercer Street.</em></h2>
+    </div>
+    <div class="visit-grid">
+      <div class="visit-card reveal">
+        <h3>The Shop</h3>
+        <div class="address">142 Mercer Street<br>SoHo, New York</div>
+        <div class="info-row"><span>Phone</span><span>(212) 555-0142</span></div>
+        <div class="info-row"><span>Email</span><span>hello@emberandoak.co</span></div>
+        <div class="info-row"><span>Reservations</span><span>Walk-ins only</span></div>
+      </div>
+      <div class="visit-card reveal">
+        <h3>Hours</h3>
+        <div class="info-row"><span>Mon — Fri</span><span>7:00 — 18:00</span></div>
+        <div class="info-row"><span>Saturday</span><span>8:00 — 19:00</span></div>
+        <div class="info-row"><span>Sunday</span><span>8:00 — 16:00</span></div>
+        <div class="info-row"><span>Holidays</span><span>By the seasons</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">Ember<span>&</span>Oak</div>
+  <div class="footer-tagline">"Slow down. The coffee is worth it."</div>
+  <div class="footer-copy">© 2026 Ember & Oak Coffee Roasters · Made with patience in New York</div>
+</footer>
+
+<script>
+  // Navbar scroll effect
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 80) {
+      nav.classList.add('scrolled');
+    } else {
+      nav.classList.remove('scrolled');
+    }
+  });
+
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => {
+          entry.target.classList.add('visible');
+        }, i * 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Smooth parallax on hero cup
+  const cup = document.querySelector('.cup');
+  document.addEventListener('mousemove', (e) => {
+    if (!cup) return;
+    const x = (e.clientX / window.innerWidth - 0.5) * 20;
+    const y = (e.clientY / window.innerHeight - 0.5) * 20;
+    cup.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+  });
+</script>
+
+</body>
+</html>
